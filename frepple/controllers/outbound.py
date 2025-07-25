@@ -57,10 +57,12 @@ class Odoo_generator:
             return getattr(obj, method)(*args)
         return None
 
-    def getData(self, model, search=None, order=None, fields=None, ids=None, object=False):
+    def getData(
+        self, model, search=None, order=None, fields=None, ids=None, object=False
+    ):
         if search is None:
-            search = []  
-        if fields is None:  
+            search = []
+        if fields is None:
             fields = []
         if ids is not None:
             if object:
@@ -238,11 +240,7 @@ class exporter(object):
 
     def run(self):
         # Check if we manage by work orders or manufacturing orders.
-        self.manage_work_orders = False
-        for rec in self.generator.getData(
-            "ir.model", search=[("model", "=", "mrp.workorder")], fields=["name"]
-        ):
-            self.manage_work_orders = True
+        self.manage_work_orders = True
 
         # Load some auxiliary data in memory
         self.load_company()
