@@ -194,32 +194,8 @@ class exporter(object):
         self.singlecompany = singlecompany
         self.delta = delta
         self.language = language
-        self.has_subcontracting = (
-            len(
-                self.generator.getData(
-                    "ir.module.module",
-                    search=[
-                        ("state", "=", "installed"),
-                        ("name", "=", "mrp_subcontracting"),
-                    ],
-                    fields=["id"],
-                )
-            )
-            > 0
-        )
-        self.has_expiry = (
-            len(
-                self.generator.getData(
-                    "ir.module.module",
-                    search=[
-                        ("state", "=", "installed"),
-                        ("name", "=", "mrp_product_expiry"),
-                    ],
-                    fields=["id"],
-                )
-            )
-            > 0
-        ) and "freppledb.shelflife" in apps
+        self.has_subcontracting = True
+        self.has_expiry = False
 
         # The mode argument defines different types of runs:
         #  - Mode 1:
