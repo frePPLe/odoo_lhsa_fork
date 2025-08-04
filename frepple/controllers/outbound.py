@@ -193,7 +193,19 @@ class exporter(object):
         self.singlecompany = singlecompany
         self.delta = delta
         self.language = language
-        self.has_subcontracting = True
+        self.has_subcontracting = (
+            len(
+                self.generator.getData(
+                    "ir.module.module",
+                    search=[
+                        ("state", "=", "installed"),
+                        ("name", "=", "mrp_subcontracting"),
+                    ],
+                    fields=["id"],
+                )
+            )
+            > 0
+        )
         self.has_expiry = False
 
         # The mode argument defines different types of runs:
