@@ -2509,6 +2509,14 @@ class exporter(object):
                 idx = 10
                 first_wo = True
                 for wo in wo_list:
+
+                    # skip the GASTOS INDIRECTOS work orders
+                    if (
+                        wo.workcenter_id
+                        and wo.workcenter_id.name == "GASTOS INDIRECTOS"
+                    ):
+                        continue
+
                     suboperation = wo.display_name
                     if len(suboperation) > 300:
                         suboperation = suboperation[0:300]
