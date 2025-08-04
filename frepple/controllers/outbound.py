@@ -2643,6 +2643,14 @@ class exporter(object):
                 # Create operationplans for each WO, starting with the last one
                 idx = 0
                 for wo in reversed(wo_list):
+
+                    # skip the GASTOS INDIRECTOS work orders
+                    if (
+                        wo.workcenter_id
+                        and wo.workcenter_id.name == "GASTOS INDIRECTOS"
+                    ):
+                        continue
+
                     idx += 1.0
                     suboperation = wo.display_name
                     if len(suboperation) > 300:
