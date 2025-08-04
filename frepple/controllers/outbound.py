@@ -1336,6 +1336,7 @@ class exporter(object):
         mrp_routing_workcenters = {}
         for i in self.generator.getData(
             "mrp.routing.workcenter",
+            search=[("workcenter_id.name", "!=", "GASTOS INDIRECTOS")],
             order="bom_id, sequence, id asc",
             fields=[
                 "name",
