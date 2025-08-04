@@ -932,6 +932,7 @@ class exporter(object):
         company.mfg_location -> resource.location
         """
         self.map_workcenters = {}
+        self.map_workcenter_time_stop = {}
         first = True
         for i in self.generator.getData(
             "mrp.workcenter",
@@ -943,6 +944,7 @@ class exporter(object):
                 "time_efficiency",
                 "default_capacity",
                 "tool",
+                "time_stop",  # cleaning time in minutes
             ],
         ):
             if first:
@@ -968,6 +970,7 @@ class exporter(object):
                 )
             )
             self.map_workcenters[i["id"]] = name
+            self.map_workcenter_time_stop[i["id"]] = i["time_stop"]
             yield '<resource name=%s maximum="%s" category="%s" subcategory="%s" efficiency="%s"><location name=%s/>%s%s</resource>\n' % (
                 quoteattr(name),
                 i["default_capacity"],
@@ -1347,6 +1350,11 @@ class exporter(object):
         ):
             if not i["bom_id"]:
                 continue
+
+            if i["workcenter_id"]:
+                i["time_stop"] = self.map_workcenter_time_stop.get(
+                    i["workcenter_id"][0], 0
+                )
 
             if i["bom_id"][0] in mrp_routing_workcenters:
                 # If the same workcenter is used multiple times in a routing,
@@ -1788,7 +1796,7 @@ class exporter(object):
                                     )
                                 )
 
-                            yield "<suboperation>" '<operation name=%s %spriority="%s" duration_per="%s" xsi:type="operation_time_per">\n' "<location name=%s/>\n" '<loads><load quantity="%f" search=%s><resource name=%s/>%s</load>%s</loads>\n' % (
+                            yield "<suboperation>" '<operation name=%s %spriority="%s" duration="%s" duration_per="%s" xsi:type="operation_time_per">\n' "<location name=%s/>\n" '<loads><load quantity="%f" search=%s><resource name=%s/>%s</load>%s</loads>\n' % (
                                 quoteattr(name),
                                 (
                                     ("description=%s " % quoteattr(i["code"]))
@@ -1796,6 +1804,11 @@ class exporter(object):
                                     else ""
                                 ),
                                 counter * 10,
+                                (
+                                    self.convert_float_time(step["time_stop"] / 1440.0)
+                                    if step.get("time_stop", 0) > 0
+                                    else "P0D"
+                                ),
                                 (
                                     self.convert_float_time(step["time_cycle"] / 1440.0)
                                     if step["time_cycle"] and step["time_cycle"] > 0
