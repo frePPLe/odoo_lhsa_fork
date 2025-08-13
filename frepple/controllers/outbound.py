@@ -1115,6 +1115,15 @@ class exporter(object):
                 use_short_names = False
                 break
 
+        size_multiple = {}
+        # Reading the size multiple from product.packaging
+        for i in self.generator.getData(
+            "product.packaging",
+            search=[("package_type_id.name", "=", "MASTER")],
+            fields=["product_id", "qty", "product_uom_id"],
+        ):
+            size_multiple[i["product_id"][0]] = (i["qty"], i["product_uom_id"][0])
+
         # Read the products
         supplierinfo_fields = [
             "partner_id",
@@ -1289,11 +1298,25 @@ class exporter(object):
                 if suppliers:
                     yield "<itemsuppliers>\n"
                     for k, v in suppliers.items():
-                        yield '<itemsupplier leadtime="P%dD" priority="%s" batchwindow="P%dD" size_minimum="%f" cost="%f"%s%s><supplier name=%s/></itemsupplier>\n' % (
+                        yield '<itemsupplier leadtime="P%dD" priority="%s" batchwindow="P%dD" size_minimum="%f" %scost="%f"%s%s><supplier name=%s/></itemsupplier>\n' % (
                             v["delay"],
                             v["sequence"] or 1,
                             v["batching_window"] or 0,
                             v["min_qty"],
+                            (
+                                (
+                                    'size_multiple="%f" '
+                                    % (
+                                        self.convert_qty_uom(
+                                            size_multiple.get(i["id"])[0],
+                                            size_multiple.get(i["id"])[1],
+                                            i["product_tmpl_id"][0],
+                                        ),
+                                    )
+                                )
+                                if i["id"] in size_multiple
+                                else ""
+                            ),
                             max(0, v["price"]),
                             (
                                 ' effective_end="%sT00:00:00"'
