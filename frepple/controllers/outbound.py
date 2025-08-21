@@ -283,6 +283,7 @@ class exporter(object):
         logger.debug("Exporting BOMs.")
         if self.mode == 1:
             yield from self.export_boms()
+            yield from self.export_bom_changes()
         logger.debug("Exporting sales orders.")
         yield from self.export_salesorders()
         # Uncomment the following lines to create forecast models in frepple
@@ -1355,6 +1356,17 @@ class exporter(object):
         # for i in recs.read(fields):
         #    mrp_routings[i["id"]] = i["location_id"]
 
+        # dict to keep track of the boms, needed for the ECO PLM
+        # Identify the BOMs that have changes
+        self.bom_changes = {}
+        for i in self.generator.getData(
+            "mrp.eco.bom.change",
+            fields=[
+                "bom_id",
+            ],
+        ):
+            self.bom_changes[i["bom_id"][0]] = []
+
         # Read all workcenters of all routings
         mrp_routing_workcenters = {}
         for i in self.generator.getData(
@@ -1871,12 +1883,49 @@ class exporter(object):
                                             ]
                                         ),
                                     )
+                                    if i["id"] in self.bom_changes:
+                                        self.bom_changes[i["id"]].append(
+                                            {
+                                                "routing": operation,  # routing name
+                                                "suboperation": name,  # suboperation name
+                                                "product_id": j["product_id"][
+                                                    0
+                                                ],  # product id
+                                                "quantity": j["qty"]
+                                                / producedQty,  # quantity,
+                                                "location": location,
+                                            }
+                                        )
                             if not first_flow:
                                 yield "</flows>\n"
                             yield "</operation></suboperation>\n"
                         yield "</suboperations>\n"
                     yield "</operation>\n"
         yield "</operations>\n"
+
+    # read the ECOs in the PLM module and update the BOM accordingly
+    # ECO BOM changes are suppoted
+    # ECO Routing changes are not supported
+    def export_bom_changes(self):
+        yield "<!-- bills of material changes -->\n"
+        yield "<flows>\n"
+        for i in self.generator.getData(
+            "mrp.eco.bom.change",
+            # fields=[
+            #     "bom_id"
+            #     "change_type",  # possible values (add,remove,update)
+            #     "product_id",
+            #     "upd_product_qty",
+            #     "uom_change",
+            #     "operation_change",  # consumed in operation
+            # ],
+            object=True,
+        ):
+            for j in self.bom_changes:
+                if j.get("product_id") == i.product_id.id:
+                    yield f'<flow xsi:type="flow_start" {"effective_end" if i.change_type == "remove" else "effective_start"}="{self.formatDateTime(j.eco_id.effectivity_date or datetime.now())}" quantity="{j.get("quantity") - i.upd_product_qty if i.change_type == "update" else j.get("quantity")}"><operation name={quoteattr(j.get("suboperation"))}/><item name={quoteattr(self.product_product[j["product_id"][0]]["name"])}/></flow>\n'
+                    break
+        yield "</flows>\n"
 
     def export_salesorders(self):
         """
