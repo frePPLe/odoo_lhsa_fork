@@ -1920,8 +1920,8 @@ class exporter(object):
             object=True,
         ):
             for j in self.bom_changes:
-                if j.get("product_id") == i.product_id.id:
-                    yield f'<flow xsi:type="flow_start" {"effective_end" if i.change_type == "remove" else "effective_start"}="{self.formatDateTime(j.eco_id.effectivity_date or datetime.now())}" quantity="{j.get("quantity") - i.upd_product_qty if i.change_type == "update" else j.get("quantity")}"><operation name={quoteattr(j.get("suboperation"))}/><item name={quoteattr(self.product_product[j["product_id"][0]]["name"])}/></flow>\n'
+                if self.bom_changes[j].get("product_id") == i.product_id.id:
+                    yield f'<flow xsi:type="flow_start" {"effective_end" if i.change_type == "remove" else "effective_start"}="{self.formatDateTime(i.eco_id.effectivity_date or datetime.now())}" quantity="{self.bom_changes[j].get("quantity") - i.upd_product_qty if i.change_type == "update" else self.bom_changes[j].get("quantity")}"><operation name={quoteattr(self.bom_changes[j].get("suboperation"))}/><item name={quoteattr(self.product_product[j["product_id"][0]]["name"])}/></flow>\n'
                     break
         yield "</flows>\n"
 
