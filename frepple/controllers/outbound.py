@@ -1361,11 +1361,9 @@ class exporter(object):
         self.bom_changes = {}
         for i in self.generator.getData(
             "mrp.eco.bom.change",
-            fields=[
-                "bom_id",
-            ],
+            object=True,
         ):
-            self.bom_changes[i["bom_id"][0]] = []
+            self.bom_changes[i.eco_id.bom_id.id] = []
 
         # Read all workcenters of all routings
         mrp_routing_workcenters = {}
