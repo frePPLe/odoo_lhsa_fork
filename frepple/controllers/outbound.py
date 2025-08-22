@@ -283,7 +283,7 @@ class exporter(object):
         logger.debug("Exporting BOMs.")
         if self.mode == 1:
             yield from self.export_boms()
-            yield from self.export_bom_changes()
+            # yield from self.export_bom_changes()
         logger.debug("Exporting sales orders.")
         yield from self.export_salesorders()
         # Uncomment the following lines to create forecast models in frepple
@@ -1920,9 +1920,10 @@ class exporter(object):
             object=True,
         ):
             for j in self.bom_changes:
-                if self.bom_changes[j].get("product_id") == i.product_id.id:
-                    yield f'<flow xsi:type="flow_start" {"effective_end" if i.change_type == "remove" else "effective_start"}="{self.formatDateTime(i.eco_id.effectivity_date or datetime.now())}" quantity="{self.bom_changes[j].get("quantity") - i.upd_product_qty if i.change_type == "update" else self.bom_changes[j].get("quantity")}"><operation name={quoteattr(self.bom_changes[j].get("suboperation"))}/><item name={quoteattr(self.product_product[j["product_id"][0]]["name"])}/></flow>\n'
-                    break
+                for d in self.bom_changes[j]:
+                    if d.get("product_id") == i.product_id.id:
+                        yield f'<flow xsi:type="flow_start" {"effective_end" if i.change_type == "remove" else "effective_start"}="{self.formatDateTime(i.eco_id.effectivity_date or datetime.now())}" quantity="{d.get("quantity") - i.upd_product_qty if i.change_type == "update" else d.get("quantity")}"><operation name={quoteattr(d.get("suboperation"))}/><item name={quoteattr(self.product_product[i.product_id.id]["name"])}/></flow>\n'
+                        break
         yield "</flows>\n"
 
     def export_salesorders(self):
