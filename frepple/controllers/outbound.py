@@ -1361,7 +1361,7 @@ class exporter(object):
         self.bom_changes = {}
         for i in self.generator.getData(
             "mrp.eco.bom.change",
-            search=[("stage_id.state", "=", "confirmed")],
+            search=[("eco_id.stage_id.state", "=", "confirmed")],
             object=True,
         ):
             self.bom_changes[i.eco_id.bom_id.id] = []
@@ -1918,7 +1918,7 @@ class exporter(object):
             #     "uom_change",
             #     "operation_change",  # consumed in operation
             # ],
-            search=[("stage_id.state", "=", "confirmed")],
+            search=[("eco_id.stage_id.state", "=", "confirmed")],
             object=True,
         ):
             if not i.eco_id.bom_id.id in self.bom_changes:
