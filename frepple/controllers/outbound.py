@@ -1361,11 +1361,9 @@ class exporter(object):
         self.bom_changes = {}
         for i in self.generator.getData(
             "mrp.eco.bom.change",
+            search=[("eco_id.stage_id.name", "=", "Effective")],
             object=True,
         ):
-            # Only consider confirmed changes
-            if i.eco_id.stage_id.state != "confirmed":
-                continue
             self.bom_changes[i.eco_id.bom_id.id] = []
 
         # Read all workcenters of all routings
@@ -1920,12 +1918,9 @@ class exporter(object):
             #     "uom_change",
             #     "operation_change",  # consumed in operation
             # ],
-            search=[("eco_id.stage_id.state", "=", "confirmed")],
+            search=[("eco_id.stage_id.name", "=", "Effective")],
             object=True,
         ):
-            # Only consider confirmed changes
-            if i.eco_id.stage_id.state != "confirmed":
-                continue
             if not i.eco_id.bom_id.id in self.bom_changes:
                 logger.warning(f"BOM with id {i.eco_id.bom_id.id} is unknown")
                 continue
