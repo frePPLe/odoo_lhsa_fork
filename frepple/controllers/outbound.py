@@ -1926,12 +1926,12 @@ class exporter(object):
                 logger.warning(f"Product with id {i.product_id.id} is unknown")
                 continue
             if i.change_type == "add":
-                yield f'<flow xsi:type="flow_start" "effective_start"="{self.formatDateTime(i.eco_id.effectivity_date or datetime.now())}" quantity="{-i.upd_product_qty}"><operation name={quoteattr(self.bom_changes.get(i.eco_id.bom_id.id)[0].get("suboperation"))}/><item name={quoteattr(self.product_product[i.product_id.id]["name"])}/></flow>\n'
+                yield f'<flow xsi:type="flow_start" effective_start="{self.formatDateTime(i.eco_id.effectivity_date or datetime.now())}" quantity="{-i.upd_product_qty}"><operation name={quoteattr(self.bom_changes.get(i.eco_id.bom_id.id)[0].get("suboperation"))}/><item name={quoteattr(self.product_product[i.product_id.id]["name"])}/></flow>\n'
             else:
                 for d in self.bom_changes[i.eco_id.bom_id.id]:
                     if d.get("product_id") == i.product_id.id:
                         if i.change_type == "remove":
-                            yield f'<flow xsi:type="flow_start" "effective_end"="{self.formatDateTime(i.eco_id.effectivity_date or datetime.now())}" quantity="{d.get("quantity")}"><operation name={quoteattr(d.get("suboperation"))}/><item name={quoteattr(self.product_product[i.product_id.id]["name"])}/></flow>\n'
+                            yield f'<flow xsi:type="flow_start" effective_end="{self.formatDateTime(i.eco_id.effectivity_date or datetime.now())}" quantity="{d.get("quantity")}"><operation name={quoteattr(d.get("suboperation"))}/><item name={quoteattr(self.product_product[i.product_id.id]["name"])}/></flow>\n'
                             break
                         elif i.change_type == "update":
                             yield f'<flow xsi:type="flow_start" quantity="{d.get("quantity") - i.upd_product_qty}"><operation name={quoteattr(d.get("suboperation"))}/><item name={quoteattr(self.product_product[i.product_id.id]["name"])}/></flow>\n'
