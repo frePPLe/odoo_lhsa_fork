@@ -1889,7 +1889,7 @@ class exporter(object):
                                                 "product_id": j["product_id"][
                                                     0
                                                 ],  # product id
-                                                "quantity": j["qty"]
+                                                "quantity": -j["qty"]
                                                 / producedQty,  # quantity,
                                                 "location": location,
                                             }
