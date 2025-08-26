@@ -1363,7 +1363,7 @@ class exporter(object):
             "mrp.eco.bom.change",
             search=[
                 ("eco_id.stage_id.allow_apply_changes", "=", True),
-                ("new_bom_id.active", "=", False),
+                ("eco_id.new_bom_id.active", "=", False),
             ],
             object=True,
         ):
@@ -1923,7 +1923,7 @@ class exporter(object):
             # ],
             search=[
                 ("eco_id.stage_id.allow_apply_changes", "=", True),
-                ("new_bom_id.active", "=", False),
+                ("eco_id.new_bom_id.active", "=", False),
             ],
             object=True,
         ):
