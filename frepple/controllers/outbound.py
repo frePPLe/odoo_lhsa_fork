@@ -1077,6 +1077,8 @@ class exporter(object):
                 "categ_id",
                 "product_variant_ids",
                 "route_ids",
+                "model_brand_id",
+                "brand_id",
             ]
             + (
                 [
@@ -1223,6 +1225,17 @@ class exporter(object):
                     else ""
                 ),
             )
+
+            if tmpl["model_brand_id"]:
+                yield '<stringproperty name="modelo" value=%s/>' % (
+                    quoteattr(tmpl["model_brand_id"][1]),
+                )
+
+            if tmpl["brand_id"]:
+                yield '<stringproperty name="marca" value=%s/>' % (
+                    quoteattr(tmpl["brand_id"][1]),
+                )
+
             # Export suppliers for the item, if the item is allowed to be purchased
             if tmpl["purchase_ok"]:
                 try:
