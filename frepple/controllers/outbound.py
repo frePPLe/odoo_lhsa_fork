@@ -1242,7 +1242,10 @@ class exporter(object):
                     # TODO it's inefficient to run a query per product template.
                     results = self.generator.getData(
                         "product.supplierinfo",
-                        search=[("product_tmpl_id", "=", tmpl["id"])],
+                        search=[
+                            ("product_tmpl_id", "=", tmpl["id"]),
+                            ("delay", ">", 0),
+                        ],
                         fields=supplierinfo_fields,
                     )
                 except Exception:
@@ -1250,7 +1253,10 @@ class exporter(object):
                     supplierinfo_fields.remove("is_subcontractor")
                     results = self.generator.getData(
                         "product.supplierinfo",
-                        search=[("product_tmpl_id", "=", tmpl["id"])],
+                        search=[
+                            ("product_tmpl_id", "=", tmpl["id"]),
+                            ("delay", ">", 0),
+                        ],
                         fields=supplierinfo_fields,
                     )
                 suppliers = {}
