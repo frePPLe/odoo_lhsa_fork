@@ -853,7 +853,12 @@ class exporter(object):
                     individual_inserted = True
             else:
                 if i["parent_id"][0] in self.map_customers:
-                    name = self.map_customers[i["parent_id"][0]]
+                    name = "%s (%s) %s" % (
+                        i["name"],
+                        i["parent_id"][1],
+                        i["id"],
+                    )
+                    yield "<customer name=%s/>\n" % quoteattr(name)
                 else:
                     continue
 
