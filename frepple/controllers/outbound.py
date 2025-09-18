@@ -1123,15 +1123,6 @@ class exporter(object):
                 use_short_names = False
                 break
 
-        size_multiple = {}
-        # Reading the size multiple from product.packaging
-        for i in self.generator.getData(
-            "product.packaging",
-            search=[("package_type_id.name", "=", "MASTER")],
-            fields=["product_id", "qty", "product_uom_id"],
-        ):
-            size_multiple[i["product_id"][0]] = (i["qty"], i["product_uom_id"][0])
-
         # Read the products
         supplierinfo_fields = [
             "partner_id",
@@ -1143,6 +1134,7 @@ class exporter(object):
             "batching_window",
             "sequence",
             "is_subcontractor",
+            "purchase_multiple",
         ]
         first = True
         for i in self.generator.getData(
@@ -1303,6 +1295,11 @@ class exporter(object):
                             not r["min_qty"] or sup["min_qty"] < r["min_qty"]
                         ):
                             r["min_qty"] = sup["min_qty"]
+                        if sup["purchase_multiple"] and (
+                            not r["purchase_multiple"]
+                            or sup["purchase_multiple"] < r["purchase_multiple"]
+                        ):
+                            r["purchase_multiple"] = sup["purchase_multiple"]
                         if sup["price"] and (
                             not r["price"] or sup["price"] < r["price"]
                         ):
@@ -1317,31 +1314,19 @@ class exporter(object):
                             "sequence": sup["sequence"] or 1,
                             "batching_window": sup["batching_window"] or 0,
                             "min_qty": sup["min_qty"],
+                            "purchase_multiple": sup["purchase_multiple"],
                             "price": max(0, sup["price"]),
                             "date_end": sup["date_end"],
                         }
                 if suppliers:
                     yield "<itemsuppliers>\n"
                     for k, v in suppliers.items():
-                        yield '<itemsupplier leadtime="P%dD" priority="%s" batchwindow="P%dD" size_minimum="%f" %scost="%f"%s%s><supplier name=%s/></itemsupplier>\n' % (
+                        yield '<itemsupplier leadtime="P%dD" priority="%s" batchwindow="P%dD" size_minimum="%f" size_multiple="%f" cost="%f"%s%s><supplier name=%s/></itemsupplier>\n' % (
                             v["delay"],
                             v["sequence"] or 1,
                             v["batching_window"] or 0,
                             v["min_qty"],
-                            (
-                                (
-                                    'size_multiple="%f" '
-                                    % (
-                                        self.convert_qty_uom(
-                                            size_multiple.get(i["id"])[0],
-                                            size_multiple.get(i["id"])[1],
-                                            i["product_tmpl_id"][0],
-                                        ),
-                                    )
-                                )
-                                if i["id"] in size_multiple
-                                else ""
-                            ),
+                            v["purchase_multiple"] or 0,
                             max(0, v["price"]),
                             (
                                 ' effective_end="%sT00:00:00"'
