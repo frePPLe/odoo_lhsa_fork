@@ -1936,7 +1936,9 @@ class exporter(object):
             ],
             object=True,
         ):
-            if not i.eco_id.bom_id.id in self.bom_changes:
+            if not i.eco_id.bom_id.id in self.bom_changes or not self.bom_changes.get(
+                i.eco_id.bom_id.id
+            ):
                 logger.warning(f"BOM with id {i.eco_id.bom_id.id} is unknown")
                 continue
             if not i.product_id.id in self.product_product:
