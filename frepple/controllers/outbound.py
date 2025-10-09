@@ -1233,6 +1233,9 @@ class exporter(object):
                     quoteattr(tmpl["dr_brand_id"][1]),
                 )
 
+            purchase_ok = 1 if tmpl["purchase_ok"] else 0
+            yield '<booleanproperty name="purchase_ok" value="%s"/>\n' % purchase_ok
+
             # Export suppliers for the item, if the item is allowed to be purchased
             if tmpl["purchase_ok"]:
                 try:
