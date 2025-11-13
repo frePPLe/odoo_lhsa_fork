@@ -1374,7 +1374,7 @@ class exporter(object):
         for i in self.generator.getData(
             "mrp.eco.bom.change",
             search=[
-                ("eco_id.stage_id.allow_apply_change", "=", True),
+                ("eco_id.stage_id.ready_for_frepple", "=", True),
                 ("eco_id.new_bom_id.active", "=", False),
             ],
             object=True,
@@ -1934,7 +1934,7 @@ class exporter(object):
             #     "operation_change",  # consumed in operation
             # ],
             search=[
-                ("eco_id.stage_id.allow_apply_change", "=", True),
+                ("eco_id.stage_id.ready_for_frepple", "=", True),
                 ("eco_id.new_bom_id.active", "=", False),
             ],
             object=True,
