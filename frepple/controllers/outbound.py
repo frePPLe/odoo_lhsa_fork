@@ -2180,21 +2180,13 @@ class exporter(object):
                     # We are done with this line, move to the next one
                     continue
                 else:
-                    qty = i["product_uom_qty"] - i["qty_delivered"]
-                    if qty <= 0:
-                        status = "closed"
-                        qty = self.convert_qty_uom(
-                            i["product_uom_qty"],
-                            i["product_uom"],
-                            self.product_product[i["product_id"][0]]["template"],
-                        )
-                    else:
-                        status = "open"
-                        qty = self.convert_qty_uom(
-                            qty,
-                            i["product_uom"],
-                            self.product_product[i["product_id"][0]]["template"],
-                        )
+                    status = "closed"
+                    qty = self.convert_qty_uom(
+                        i["product_uom_qty"],
+                        i["product_uom"],
+                        self.product_product[i["product_id"][0]]["template"],
+                    )
+
             elif state == "done":
                 status = "closed"
                 qty = self.convert_qty_uom(
