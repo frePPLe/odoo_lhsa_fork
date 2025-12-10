@@ -27,7 +27,7 @@ import logging
 import pytz
 import xmlrpc.client
 from xml.sax.saxutils import quoteattr
-from datetime import date, datetime, timedelta, time, timezone
+from datetime import date, datetime, timedelta, time, timezone as datetime_timezone
 from pytz import timezone
 import ssl
 from zoneinfo import ZoneInfo
@@ -467,7 +467,7 @@ class exporter(object):
             return dt_midnight.strftime(self.timeformat)
 
         # 2. Attach UTC tzinfo (now it's aware UTC)
-        d = d.replace(tzinfo=timezone.utc)
+        d = d.replace(tzinfo=datetime_timezone.utc)
 
         # 3. Convert to target tz
         tz = ZoneInfo(tmzone or "America/Argentina/Buenos_Aires")
