@@ -1562,6 +1562,7 @@ class exporter(object):
                                 "product_id",
                                 "operation_id",
                                 "bom_product_template_attribute_value_ids",
+                                "mrp_substitute_product_id"
                             ],
                         ):
                             # check if this BOM line applies to this variant
@@ -1581,6 +1582,7 @@ class exporter(object):
                                 fl[j["product_id"][0]].append(j)
                             else:
                                 fl[j["product_id"][0]] = [j]
+
                         for j in fl:
                             product = self.product_product[j]
                             qty = sum(
@@ -1594,9 +1596,16 @@ class exporter(object):
                                 for k in fl[j]
                             )
                             if qty > 0:
-                                yield '<flow xsi:type="flow_start" quantity="-%f"><item name=%s/></flow>\n' % (
+                                yield '<flow xsi:type="flow_start" quantity="-%f"%s><item name=%s/></flow>\n' % (
                                     qty / producedQty,
+                                    (' name=%s priority="1"' % (quoteattr(product["name"]),)) if j["mrp_substitute_product_id"] and j["mrp_substitute_product_id"][0] in self.product_product else "",
                                     quoteattr(product["name"]),
+                                )
+                                if j["mrp_substitute_product_id"] and j["mrp_substitute_product_id"][0] in self.product_product:
+                                    yield '<flow xsi:type="flow_start" quantity="-%f"%s><item name=%s/></flow>\n' % (
+                                    qty / producedQty,
+                                    (' name=%s priority="2"' % (quoteattr(product["name"]),)) if j["mrp_substitute_product_id"] and j["mrp_substitute_product_id"][0] in self.product_product else "",
+                                    quoteattr(self.product_product[j["mrp_substitute_product_id"][0]]),
                                 )
 
                         # Build byproduct flows
@@ -1732,6 +1741,7 @@ class exporter(object):
                                 "product_id",
                                 "operation_id",
                                 "bom_product_template_attribute_value_ids",
+                                "mrp_substitute_product_id",
                             ],
                         ):
                             # check if this BOM line applies to this variant
@@ -1889,14 +1899,33 @@ class exporter(object):
                                     if first_flow:
                                         first_flow = False
                                         yield "<flows>\n"
-                                    yield '<flow xsi:type="flow_start" quantity="-%f"><item name=%s/></flow>\n' % (
+                                    yield '<flow xsi:type="flow_start" quantity="-%f"%s><item name=%s/></flow>\n' % (
                                         j["qty"] / producedQty,
+                                        (' name=%s priority="1"' % (quoteattr(
+                                            self.product_product[j["product_id"][0]][
+                                                "name"
+                                            ]
+                                        ),)) if j["mrp_substitute_product_id"] and j["mrp_substitute_product_id"][0] in self.product_product else "",
                                         quoteattr(
                                             self.product_product[j["product_id"][0]][
                                                 "name"
                                             ]
                                         ),
                                     )
+                                    if j["mrp_substitute_product_id"] and j["mrp_substitute_product_id"][0] in self.product_product:
+                                        yield '<flow xsi:type="flow_start" quantity="-%f"%s><item name=%s/></flow>\n' % (
+                                            j["qty"] / producedQty,
+                                            (' name=%s priority="2"' % (quoteattr(
+                                                self.product_product[j["product_id"][0]][
+                                                    "name"
+                                                ]
+                                            ),)) if j["mrp_substitute_product_id"] and j["mrp_substitute_product_id"][0] in self.product_product else "",
+                                            quoteattr(
+                                                self.product_product[j["mrp_substitute_product_id"][0]][
+                                                    "name"
+                                                ]
+                                            ),
+                                        )
                                     if i["id"] in self.bom_changes:
                                         self.bom_changes[i["id"]].append(
                                             {
