@@ -1598,14 +1598,14 @@ class exporter(object):
                             if qty > 0:
                                 yield '<flow xsi:type="flow_start" quantity="-%f"%s><item name=%s/></flow>\n' % (
                                     qty / producedQty,
-                                    (' name=%s priority="1"' % (quoteattr(product["name"]),)) if j["mrp_substitute_product_id"] and j["mrp_substitute_product_id"][0] in self.product_product else "",
+                                    (' name=%s priority="1"' % (quoteattr(product["name"]),)) if j["mrp_substitute_product_id"] and j["mrp_substitute_product_id"] in self.product_product else "",
                                     quoteattr(product["name"]),
                                 )
-                                if j["mrp_substitute_product_id"] and j["mrp_substitute_product_id"][0] in self.product_product:
+                                if j["mrp_substitute_product_id"] and j["mrp_substitute_product_id"] in self.product_product:
                                     yield '<flow xsi:type="flow_start" quantity="-%f"%s><item name=%s/></flow>\n' % (
                                     qty / producedQty,
-                                    (' name=%s priority="2"' % (quoteattr(product["name"]),)) if j["mrp_substitute_product_id"] and j["mrp_substitute_product_id"][0] in self.product_product else "",
-                                    quoteattr(self.product_product[j["mrp_substitute_product_id"][0]]),
+                                    (' name=%s priority="2"' % (quoteattr(product["name"]),)) if j["mrp_substitute_product_id"] and j["mrp_substitute_product_id"] in self.product_product else "",
+                                    quoteattr(self.product_product[j["mrp_substitute_product_id"]]),
                                 )
 
                         # Build byproduct flows
@@ -1905,23 +1905,23 @@ class exporter(object):
                                             self.product_product[j["product_id"][0]][
                                                 "name"
                                             ]
-                                        ),)) if j["mrp_substitute_product_id"] and j["mrp_substitute_product_id"][0] in self.product_product else "",
+                                        ),)) if j["mrp_substitute_product_id"] and j["mrp_substitute_product_id"] in self.product_product else "",
                                         quoteattr(
                                             self.product_product[j["product_id"][0]][
                                                 "name"
                                             ]
                                         ),
                                     )
-                                    if j["mrp_substitute_product_id"] and j["mrp_substitute_product_id"][0] in self.product_product:
+                                    if j["mrp_substitute_product_id"] and j["mrp_substitute_product_id"] in self.product_product:
                                         yield '<flow xsi:type="flow_start" quantity="-%f"%s><item name=%s/></flow>\n' % (
                                             j["qty"] / producedQty,
                                             (' name=%s priority="2"' % (quoteattr(
                                                 self.product_product[j["product_id"][0]][
                                                     "name"
                                                 ]
-                                            ),)) if j["mrp_substitute_product_id"] and j["mrp_substitute_product_id"][0] in self.product_product else "",
+                                            ),)) if j["mrp_substitute_product_id"] and j["mrp_substitute_product_id"] in self.product_product else "",
                                             quoteattr(
-                                                self.product_product[j["mrp_substitute_product_id"][0]][
+                                                self.product_product[j["mrp_substitute_product_id"]][
                                                     "name"
                                                 ]
                                             ),
