@@ -1947,7 +1947,7 @@ class exporter(object):
             #     "operation_change",  # consumed in operation
             # ],
             search=[
-                ("eco_id.stage_id.ready_for_frepple", "=", True),
+                #  ("eco_id.stage_id.ready_for_frepple", "=", True),
                 ("eco_id.new_bom_id.active", "=", False),
             ],
             object=True,
