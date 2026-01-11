@@ -1745,6 +1745,7 @@ class exporter(object):
                                 "product_id",
                                 "operation_id",
                                 "bom_product_template_attribute_value_ids",
+                                "mrp_substitute_product_id",
                             ],
                         ):
                             # check if this BOM line applies to this variant
@@ -1902,7 +1903,26 @@ class exporter(object):
                                     if first_flow:
                                         first_flow = False
                                         yield "<flows>\n"
-                                    yield '<flow xsi:type="flow_start" quantity="-%f"><item name=%s/></flow>\n' % (
+                                    yield '<flow xsi:type="flow_start" %squantity="-%f"><item name=%s/></flow>\n' % (
+                                        ('name=%s ' % (quoteattr(
+                                            self.product_product[j["product_id"][0]][
+                                                "name"
+                                            ]
+                                        ),)) if j.get("mrp_substitute_product_id") and j.get("mrp_substitute_product_id")[0] in self.product_product else"",
+                                        j["qty"] / producedQty,
+                                        quoteattr(
+                                            self.product_product[j["product_id"][0]][
+                                                "name"
+                                            ]
+                                        ),
+                                    )
+                                    if j.get("mrp_substitute_product_id") and j.get("mrp_substitute_product_id")[0] in self.product_product:
+                                        yield '<flow xsi:type="flow_start" %squantity="-%f"><item name=%s/></flow>\n' % (
+                                        ('name=%s ' % (quoteattr(
+                                            self.product_product[j.get("mrp_substitute_product_id")[0]][
+                                                "name"
+                                            ]
+                                        ),)) if j.get("mrp_substitute_product_id") and j.get("mrp_substitute_product_id")[0] in self.product_product else"",
                                         j["qty"] / producedQty,
                                         quoteattr(
                                             self.product_product[j["product_id"][0]][
