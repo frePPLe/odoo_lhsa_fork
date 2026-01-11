@@ -1919,13 +1919,13 @@ class exporter(object):
                                     if j.get("mrp_substitute_product_id") and j.get("mrp_substitute_product_id")[0] in self.product_product:
                                         yield '<flow xsi:type="flow_start" %squantity="-%f"><item name=%s/></flow>\n' % (
                                         ('name=%s ' % (quoteattr(
-                                            self.product_product[j.get("mrp_substitute_product_id")[0]][
+                                            self.product_product[j["product_id"][0]][
                                                 "name"
                                             ]
                                         ),)) if j.get("mrp_substitute_product_id") and j.get("mrp_substitute_product_id")[0] in self.product_product else"",
                                         j["qty"] / producedQty,
                                         quoteattr(
-                                            self.product_product[j["product_id"][0]][
+                                            self.product_product[j.get("mrp_substitute_product_id")[0]][
                                                 "name"
                                             ]
                                         ),
