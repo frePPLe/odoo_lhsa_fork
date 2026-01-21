@@ -27,9 +27,10 @@ import logging
 import pytz
 import xmlrpc.client
 from xml.sax.saxutils import quoteattr
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta, time, timezone as datetime_timezone
 from pytz import timezone
 import ssl
+from zoneinfo import ZoneInfo
 
 try:
     import odoo
@@ -459,9 +460,21 @@ class exporter(object):
         )
 
     def formatDateTime(self, d, tmzone=None):
-        if not isinstance(d, datetime):
-            d = datetime.fromisoformat(d)
-        return d.astimezone(timezone(tmzone or self.timezone)).strftime(self.timeformat)
+        # 1. Ensure d is a datetime
+        if isinstance(d, date) and not isinstance(d, datetime):
+            # A pure date: treat as midnight UTC and no conversion
+            dt_midnight = datetime.combine(d, time(0, 0))
+            return dt_midnight.strftime(self.timeformat)
+
+        # 2. Attach UTC tzinfo (now it's aware UTC)
+        d = d.replace(tzinfo=datetime_timezone.utc)
+
+        # 3. Convert to target tz
+        tz = ZoneInfo(tmzone or "America/Argentina/Buenos_Aires")
+        d_local = d.astimezone(tz)
+
+        # 4. Format
+        return d_local.strftime(self.timeformat)
 
     def export_users(self):
         users = []
@@ -1374,7 +1387,7 @@ class exporter(object):
         for i in self.generator.getData(
             "mrp.eco.bom.change",
             search=[
-                ("eco_id.stage_id.allow_apply_change", "=", True),
+                ("eco_id.stage_id.ready_for_frepple", "=", True),
                 ("eco_id.new_bom_id.active", "=", False),
             ],
             object=True,
@@ -1562,7 +1575,6 @@ class exporter(object):
                                 "product_id",
                                 "operation_id",
                                 "bom_product_template_attribute_value_ids",
-                                "mrp_substitute_product_id"
                             ],
                         ):
                             # check if this BOM line applies to this variant
@@ -1582,7 +1594,6 @@ class exporter(object):
                                 fl[j["product_id"][0]].append(j)
                             else:
                                 fl[j["product_id"][0]] = [j]
-
                         for j in fl:
                             product = self.product_product[j]
                             qty = sum(
@@ -1596,16 +1607,9 @@ class exporter(object):
                                 for k in fl[j]
                             )
                             if qty > 0:
-                                yield '<flow xsi:type="flow_start" quantity="-%f"%s><item name=%s/></flow>\n' % (
+                                yield '<flow xsi:type="flow_start" quantity="-%f"><item name=%s/></flow>\n' % (
                                     qty / producedQty,
-                                    (' name=%s priority="1"' % (quoteattr(product["name"]),)) if j["mrp_substitute_product_id"] and j["mrp_substitute_product_id"] in self.product_product else "",
                                     quoteattr(product["name"]),
-                                )
-                                if j["mrp_substitute_product_id"] and j["mrp_substitute_product_id"] in self.product_product:
-                                    yield '<flow xsi:type="flow_start" quantity="-%f"%s><item name=%s/></flow>\n' % (
-                                    qty / producedQty,
-                                    (' name=%s priority="2"' % (quoteattr(product["name"]),)) if j["mrp_substitute_product_id"] and j["mrp_substitute_product_id"] in self.product_product else "",
-                                    quoteattr(self.product_product[j["mrp_substitute_product_id"]]),
                                 )
 
                         # Build byproduct flows
@@ -1899,31 +1903,61 @@ class exporter(object):
                                     if first_flow:
                                         first_flow = False
                                         yield "<flows>\n"
-                                    yield '<flow xsi:type="flow_start" quantity="-%f"%s><item name=%s/></flow>\n' % (
+                                    yield '<flow xsi:type="flow_start" %squantity="-%f"><item name=%s/></flow>\n' % (
+                                        (
+                                            (
+                                                'name=%s priority="1" '
+                                                % (
+                                                    quoteattr(
+                                                        self.product_product[
+                                                            j["product_id"][0]
+                                                        ]["name"]
+                                                    ),
+                                                )
+                                            )
+                                            if j.get("mrp_substitute_product_id")
+                                            and j.get("mrp_substitute_product_id")[0]
+                                            in self.product_product
+                                            else ""
+                                        ),
                                         j["qty"] / producedQty,
-                                        (' name=%s priority="1"' % (quoteattr(
-                                            self.product_product[j["product_id"][0]][
-                                                "name"
-                                            ]
-                                        ),)) if j["mrp_substitute_product_id"] and j["mrp_substitute_product_id"] in self.product_product else "",
                                         quoteattr(
                                             self.product_product[j["product_id"][0]][
                                                 "name"
                                             ]
                                         ),
                                     )
-                                    if j["mrp_substitute_product_id"] and j["mrp_substitute_product_id"] in self.product_product:
-                                        yield '<flow xsi:type="flow_start" quantity="-%f"%s><item name=%s/></flow>\n' % (
+                                    if (
+                                        j.get("mrp_substitute_product_id")
+                                        and j.get("mrp_substitute_product_id")[0]
+                                        in self.product_product
+                                    ):
+                                        yield '<flow xsi:type="flow_start" %squantity="-%f"><item name=%s/></flow>\n' % (
+                                            (
+                                                (
+                                                    'name=%s priority="2" '
+                                                    % (
+                                                        quoteattr(
+                                                            self.product_product[
+                                                                j["product_id"][0]
+                                                            ]["name"]
+                                                        ),
+                                                    )
+                                                )
+                                                if j.get("mrp_substitute_product_id")
+                                                and j.get("mrp_substitute_product_id")[
+                                                    0
+                                                ]
+                                                in self.product_product
+                                                else ""
+                                            ),
                                             j["qty"] / producedQty,
-                                            (' name=%s priority="2"' % (quoteattr(
-                                                self.product_product[j["product_id"][0]][
-                                                    "name"
-                                                ]
-                                            ),)) if j["mrp_substitute_product_id"] and j["mrp_substitute_product_id"] in self.product_product else "",
                                             quoteattr(
-                                                self.product_product[j["mrp_substitute_product_id"]][
-                                                    "name"
-                                                ]
+                                                self.product_product[
+                                                    j.get("mrp_substitute_product_id")[
+                                                        0
+                                                    ]
+                                                ]["name"]
                                             ),
                                         )
                                     if i["id"] in self.bom_changes:
@@ -1963,7 +1997,7 @@ class exporter(object):
             #     "operation_change",  # consumed in operation
             # ],
             search=[
-                ("eco_id.stage_id.allow_apply_change", "=", True),
+                ("eco_id.stage_id.ready_for_frepple", "=", True),
                 ("eco_id.new_bom_id.active", "=", False),
             ],
             object=True,
@@ -2196,21 +2230,13 @@ class exporter(object):
                     # We are done with this line, move to the next one
                     continue
                 else:
-                    qty = i["product_uom_qty"] - i["qty_delivered"]
-                    if qty <= 0:
-                        status = "closed"
-                        qty = self.convert_qty_uom(
-                            i["product_uom_qty"],
-                            i["product_uom"],
-                            self.product_product[i["product_id"][0]]["template"],
-                        )
-                    else:
-                        status = "open"
-                        qty = self.convert_qty_uom(
-                            qty,
-                            i["product_uom"],
-                            self.product_product[i["product_id"][0]]["template"],
-                        )
+                    status = "closed"
+                    qty = self.convert_qty_uom(
+                        i["product_uom_qty"],
+                        i["product_uom"],
+                        self.product_product[i["product_id"][0]]["template"],
+                    )
+
             elif state == "done":
                 status = "closed"
                 qty = self.convert_qty_uom(
